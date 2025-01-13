@@ -21,8 +21,8 @@ This tool helps you download videos from your TikTok data export JSON file. It a
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your-username/tiktok-data-export-downloader.git
-cd tiktok-data-export-downloader
+git clone https://github.com/your-username/tt_download.git
+cd tt_download
 ```
 
 2. Install the required dependencies:
@@ -39,7 +39,7 @@ pip install yt-dlp
 
 ## Usage
 
-1. Request your TikTok data export from TikTok settings
+1. Request your TikTok data export from TikTok settings (choose JSON format)
 2. Wait for TikTok to email you the data export or find it on your settings page (can take several days)
 3. Extract the received ZIP file
 4. Run the script:
