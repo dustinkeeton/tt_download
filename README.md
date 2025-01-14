@@ -22,7 +22,7 @@ This tool helps you download videos from your TikTok data export JSON file. It a
 1. Clone this repository:
 
 ```bash
-git clone https://github.com/your-username/tt_download.git
+git clone https://github.com/dustinkeeton/tt_download.git
 cd tt_download
 ```
 
