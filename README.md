@@ -57,6 +57,8 @@ python download_tiktok_videos.py json_file output_dir
 ### Command Line Arguments
 
 - `--help`: Show help for command line arguments
+- `--include`: Specify which lists to include (default: all). Can include: own, favorite, liked.
+- `--exclude`: Specify which lists to exclude. Can exclude: own, favorite, liked. Cannot be used with include.
 
 ## File Organization
 

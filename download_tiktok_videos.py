@@ -43,8 +43,8 @@ def process_video_list(videos, output_dir, list_type, start_index=0, total_video
     
     for video in videos:
         current_index += 1
-        url = video["Link"]
-        video_id = url.rstrip('/').split('/')[-1] if list_type != 'own' else url.split('/')[5].split('?')[0]
+        url = video.get("Link") or video.get("link")
+        video_id = url.rstrip('/').split('/')[-1] if list_type != 'own' else url.split('/')[6].split('?')[0]
         
         print(f"[{current_index}/{total_videos}] Downloading {list_type} video {video_id}")
         
@@ -67,6 +67,10 @@ def main():
     parser = argparse.ArgumentParser(description='Download TikTok videos from data export')
     parser.add_argument('json_file', type=str, help='Path to the TikTok data export JSON file')
     parser.add_argument('output_dir', type=str, help='Path to save the downloaded videos')
+    parser.add_argument('--include', type=str, nargs='+', choices=['own', 'favorite', 'liked'],
+                      help='Specify which lists to include (default: all)')
+    parser.add_argument('--exclude', type=str, nargs='+', choices=['own', 'favorite', 'liked'],
+                      help='Specify which lists to exclude')
     
     args = parser.parse_args()
 
@@ -86,42 +90,37 @@ def main():
     with open(json_path, 'r') as f:
         data = json.load(f)
 
-    # Get both Favorite and Like lists
-    favorite_videos = data["Activity"]["Favorite Videos"].get("FavoriteVideoList", [])
-    liked_videos = data["Activity"]["Like List"].get("ItemFavoriteList", [])
-    own_videos = data["Video"]["Videos"].get("VideoList", [])
-    
-    total_videos = len(favorite_videos) + len(liked_videos) + len(own_videos)
-    print(f"Found {len(favorite_videos)} favorite videos and {len(liked_videos)} liked videos, and {len(own_videos)} own videos")
+    # Define all possible lists
+    video_lists = {
+        'own': data["Video"]["Videos"].get("VideoList", []),
+        'favorite': data["Activity"]["Favorite Videos"].get("FavoriteVideoList", []),
+        'liked': data["Activity"]["Like List"].get("ItemFavoriteList", [])
+    }
+
+    # Handle include/exclude arguments
+    if args.include:
+        lists_to_process = {k: v for k, v in video_lists.items() if k in args.include}
+    elif args.exclude:
+        lists_to_process = {k: v for k, v in video_lists.items() if k not in args.exclude}
+    else:
+        lists_to_process = video_lists
+
+    total_videos = sum(len(videos) for videos in lists_to_process.values())
     print(f"Total videos to download: {total_videos}")
+    for list_type, videos in lists_to_process.items():
+        print(f"Found {len(videos)} {list_type} videos")
     print(f"Saving to: {output_dir}")
 
-    # Process own videos first
-    process_video_list(
-        own_videos,
-        output_dir,
-        "own",
-        start_index=0,
-        total_videos=total_videos
-    )
-
-    # Then process favorite videos
-    current_index = process_video_list(
-        favorite_videos, 
-        output_dir, 
-        "favorite",
-        start_index=current_index,
-        total_videos=total_videos
-    )
-
-    # Finally, process liked videos
-    process_video_list(
-        liked_videos, 
-        output_dir, 
-        "liked",
-        start_index=current_index,
-        total_videos=total_videos
-    )
+    current_index = 0
+    # Process each enabled list
+    for list_type, videos in lists_to_process.items():
+        current_index = process_video_list(
+            videos,
+            output_dir,
+            list_type,
+            start_index=current_index,
+            total_videos=total_videos
+        )
 
     print("Download complete!")
 
