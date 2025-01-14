@@ -4,20 +4,33 @@ from pathlib import Path
 import time
 import sys
 import argparse
+import requests
 
 def download_tiktok_video(url, output_dir, video_id, list_type):
     try:
-        output_template = f"{output_dir}/{list_type}_tiktok_{video_id}.%(ext)s"
-        command = [
-            "yt-dlp",
-            "--no-warnings",
-            "-o", output_template,
-            url
-        ]
-        subprocess.run(command, check=True)
+        # If it's a direct CDN URL
+        if 'tiktokv.us' in url:
+            output_path = f"{output_dir}/{list_type}_tiktok_{video_id}.mp4"
+            response = requests.get(url, stream=True)
+            response.raise_for_status()
+            
+            with open(output_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+        else:
+            # Fallback to yt-dlp for regular TikTok URLs
+            output_template = f"{output_dir}/{list_type}_tiktok_{video_id}.%(ext)s"
+            command = [
+                "yt-dlp",
+                "--no-warnings",
+                "-o", output_template,
+                url
+            ]
+            subprocess.run(command, check=True)
         return True
-    except subprocess.CalledProcessError:
+    except (subprocess.CalledProcessError, requests.RequestException) as e:
         print(f"Failed to download: {url}")
+        print(f"Error: {str(e)}")
         return False
 
 def process_video_list(videos, output_dir, list_type, start_index=0, total_videos=None):
@@ -31,7 +44,7 @@ def process_video_list(videos, output_dir, list_type, start_index=0, total_video
     for video in videos:
         current_index += 1
         url = video["Link"]
-        video_id = url.rstrip('/').split('/')[-1]
+        video_id = url.rstrip('/').split('/')[-1] if list_type != 'own' else url.split('/')[5].split('?')[0]
         
         print(f"[{current_index}/{total_videos}] Downloading {list_type} video {video_id}")
         
@@ -76,22 +89,32 @@ def main():
     # Get both Favorite and Like lists
     favorite_videos = data["Activity"]["Favorite Videos"].get("FavoriteVideoList", [])
     liked_videos = data["Activity"]["Like List"].get("ItemFavoriteList", [])
+    own_videos = data["Video"]["Videos"].get("VideoList", [])
     
-    total_videos = len(favorite_videos) + len(liked_videos)
-    print(f"Found {len(favorite_videos)} favorite videos and {len(liked_videos)} liked videos")
+    total_videos = len(favorite_videos) + len(liked_videos) + len(own_videos)
+    print(f"Found {len(favorite_videos)} favorite videos and {len(liked_videos)} liked videos, and {len(own_videos)} own videos")
     print(f"Total videos to download: {total_videos}")
     print(f"Saving to: {output_dir}")
 
-    # Process favorite videos first
-    current_index = process_video_list(
-        favorite_videos, 
-        output_dir, 
-        "favorite",
+    # Process own videos first
+    process_video_list(
+        own_videos,
+        output_dir,
+        "own",
         start_index=0,
         total_videos=total_videos
     )
 
-    # Then process liked videos
+    # Then process favorite videos
+    current_index = process_video_list(
+        favorite_videos, 
+        output_dir, 
+        "favorite",
+        start_index=current_index,
+        total_videos=total_videos
+    )
+
+    # Finally, process liked videos
     process_video_list(
         liked_videos, 
         output_dir, 

@@ -14,7 +14,8 @@ This tool helps you download videos from your TikTok data export JSON file. It a
 ## Prerequisites
 
 - Python 3.6+
-- [yt-dlp](https://github.com/yt-dlp/yt-dlp) (will need to be installed separately)
+- Download Python from https://www.python.org/downloads/ if not already installed
+- Verify installation by running `python --version` in your terminal
 
 ## Installation
 
@@ -62,6 +63,7 @@ python download_tiktok_videos.py json_file output_dir
 Downloaded videos are organized in the following structure:
 ```
 output_dir/
+├── own_tiktok_{video_id}.*
 ├── favorite_tiktok_{video_id}.*
 └── liked_tiktok_{video_id}.*
 ```
