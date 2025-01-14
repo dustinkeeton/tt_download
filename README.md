@@ -16,6 +16,11 @@ This tool helps you download videos from your TikTok data export JSON file. It a
 - Python 3.6+
 - Download Python from https://www.python.org/downloads/ if not already installed
 - Verify installation by running `python --version` in your terminal
+- Git
+  - Windows: Download and install from https://git-scm.com/download/win
+  - macOS: Install via Homebrew with `brew install git` or download from https://git-scm.com/download/mac
+  - Linux: Install via package manager, e.g. `sudo apt install git` (Ubuntu/Debian) or `sudo dnf install git` (Fedora)
+  - Verify installation by running `git --version` in your terminal
 
 ## Installation
 
